@@ -24,8 +24,8 @@ Travel Expense Manager is a web application designed to simplify the management 
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/your-repo-name.git
-   cd your-repo-name
+   git clone https://github.com/FaisalNabil/TravelTally.git
+   cd TravelTally
    ```
 
 2. **Install dependencies:**
@@ -113,6 +113,6 @@ This project is currently not open source.
 
 ## Contact
 
-Your Name - [your-email@example.com](mailto:tousif.md.amin.faisal@gmail.com)
+Your Name - [tousif.md.amin.faisal@gmail.com](mailto:tousif.md.amin.faisal@gmail.com)
 
-Project Link: [https://github.com/your-username/your-repo-name](https://github.com/FaisalNabil/TravelTally.git)
+Project Link: [https://github.com/FaisalNabil/TravelTally.git](https://github.com/FaisalNabil/TravelTally.git)
