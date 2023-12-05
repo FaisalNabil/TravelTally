@@ -7,7 +7,6 @@ export const AuthProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     const logout = () => {
-        console.log("log out");
         localStorage.removeItem('user');
         setUser(null);
     };

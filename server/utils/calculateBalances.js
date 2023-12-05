@@ -1,28 +1,33 @@
-function calculateBalances(tour) {
-    let totalSpent = 0;
-    const balances = {};
-    const settlements = [];
+const { aggregate } = require("../models/Tour");
 
-    // Initialize balances
+function calculateBalances(tour) {
+    let balances = {};
+    let individualExpenses = {};
+
+    // Initialize balances for each member
     tour.members.forEach(member => {
-        balances[member._id] = { paid: 0, owes: 0, name: member.name };
+        balances[member._id.toString()] = { paid: 0, owes: 0, name: member.name };
+        individualExpenses[member._id.toString()] = { paid: 0, shouldHavePaid: 0, name: member.name };
     });
-    console.log(balances);
 
     // Aggregate expenses
     tour.expenses.forEach(expense => {
-        if (expense.paidBy && expense.paidBy.memberId) {
-            console.log(expense.paidBy);
-            balances[expense.paidBy.memberId].paid += expense.amount;
-            totalSpent += expense.amount;
-        }
+        const payerId = expense.paidBy.memberId.toString();
+        balances[payerId].paid += expense.amount;
+        individualExpenses[payerId].paid += expense.amount;
+
+        // Divide the expense amount among involved members
+        const amountPerMember = expense.amount / expense.involvedMembers.length;
+        expense.involvedMembers.forEach(member => {
+            const memberIdStr = member.memberId.toString();
+            balances[memberIdStr].owes += amountPerMember;
+            individualExpenses[memberIdStr].shouldHavePaid += amountPerMember;
+        });
     });
-
-    const averageExpense = totalSpent / tour.members.length;
-
-    // Calculate how much each member owes or is owed
+    
+    // Calculate total expense per member
     for (const memberId in balances) {
-        balances[memberId].owes = averageExpense - balances[memberId].paid;
+        balances[memberId].owes -= balances[memberId].paid;
     }
 
     // Create arrays for members who owe and are owed
@@ -40,6 +45,7 @@ function calculateBalances(tour) {
     owedArray.sort((a, b) => b.amount - a.amount);
 
     // Match settlements
+    let settlements = [];
     while (oweArray.length > 0 && owedArray.length > 0) {
         const owe = oweArray[0];
         const owed = owedArray[0];
@@ -59,8 +65,8 @@ function calculateBalances(tour) {
         if (owe.amount === 0) oweArray.shift();
         if (owed.amount === 0) owedArray.shift();
     }
-
-    return settlements;
+    
+    return { settlements, individualExpenses };
 }
 
 module.exports = calculateBalances;

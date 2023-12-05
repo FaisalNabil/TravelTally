@@ -5,6 +5,9 @@ import { FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel,
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Layout from './Layout';
 
 
 const TourUpdate = () => {
@@ -18,6 +21,7 @@ const TourUpdate = () => {
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('');
+    const [expanded, setExpanded] = useState('panel1');
 
     const serverUrl = process.env.REACT_APP_API_URL;
     const styles = {
@@ -43,6 +47,14 @@ const TourUpdate = () => {
             padding: 2,
             margin: 2,
         },
+        individualExpensesCard: {
+            backgroundColor: '#f5f5f5', // Example background color
+            padding: 2,
+            margin: 2,
+        },
+        accordion: {
+            width: '100%', // Ensure full width
+        },
     };
 
     // States for expense details
@@ -53,6 +65,11 @@ const TourUpdate = () => {
         date: new Date().toISOString().slice(0, 10), // Default to today's date
         involvedMembers: [],
     });
+
+
+    const handleAccordionChange = (panel) => (event, isExpanded) => {
+        setExpanded(isExpanded ? panel : false);
+    };
 
     const handleBackClick = () => {
         navigate('/dashboard');
@@ -86,7 +103,6 @@ const TourUpdate = () => {
                 }
     
                 const data = await response.json();
-                console.log(data);
                 setTour(data);
                 setExpenses(data.expenses);
                 setMembers(data.members); // Assuming the API returns a list of members
@@ -305,6 +321,7 @@ const TourUpdate = () => {
 
     const SettlementsDisplay = ({ tourId }) => {
         const [settlements, setSettlements] = useState([]);
+        const [individualExpenses, setIndividualExpenses] = useState([]);
         const [isLoading, setIsLoading] = useState(true);
     
         useEffect(() => {
@@ -322,12 +339,28 @@ const TourUpdate = () => {
                 console.error('Error fetching settlements:', error);
                 setIsLoading(false);
             });
+            fetch(`${serverUrl}/api/tours/${tourId}/individualExpenses`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                setIndividualExpenses(data);
+                setIsLoading(false);
+            })
+            .catch(error => {
+                console.error('Error fetching individual expenses:', error);
+                setIsLoading(false);
+            });
         }, [tourId]);
     
         if (isLoading) return <p>Loading settlements...</p>;
         if (settlements.length === 0) return <p>No settlements to display.</p>;
+        if (individualExpenses.length === 0) return <p>No individual expenses to display.</p>;
     
         return (
+            <div>
             <Box sx={styles.settlementCard}>
                 <Typography variant="h6">Settlements</Typography>
                         <List>
@@ -341,6 +374,21 @@ const TourUpdate = () => {
                             ))}
                         </List>
             </Box>
+
+            <Box sx={styles.individualExpensesCard}>
+                <Typography variant="h6">Individual Expense Summary</Typography>
+                        <List>
+                            {individualExpenses.map((expense, index) => (
+                                <ListItem key={index}>
+                                    <ListItemText
+                                        primary={`${expense.member.name}'s Contribution`}
+                                        secondary={`Paid: $${expense.paid} | Expected: $${expense.shouldHavePaid}`}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+            </Box>
+            </div>
         );
     };
     
@@ -370,88 +418,123 @@ const TourUpdate = () => {
     };
 
     return (
-        <Container>
-            <Box sx={{ marginTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box sx={styles.headingBox}>
-                    <Typography variant="h4">{tour ? tour.name : 'Loading...'}</Typography>
-                    <Box sx={styles.buttonGroup}>
-                        <Button onClick={handleBackClick} variant="outlined">Back to Dashboard</Button>
-                        <Button onClick={handleOpenModal} variant="contained" color="primary">Add New Expense</Button>
-                    </Box>
-                    <List>
-                        {renderExpenses()}
-                    </List>
-                    <Modal open={openModal} onClose={handleCloseModal}>
-                        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4 }}>
-                            <IconButton aria-label="close" onClick={handleCloseModal} sx={{ position: 'absolute', right: 8, top: 8 }}>
-                                <CloseIcon />
-                            </IconButton>
-                            <Typography variant="h6">{expenseDetails._id ? 'Edit Expense' : 'Add Expense'}</Typography>
-                            <TextField label="Amount" value={expenseDetails.amount} onChange={(e) => setExpenseDetails({ ...expenseDetails, amount: e.target.value })} fullWidth margin="normal" />
-                            <TextField label="Description" value={expenseDetails.description} onChange={(e) => setExpenseDetails({ ...expenseDetails, description: e.target.value })} fullWidth margin="normal" />
-                            <TextField type="date" label="Date" value={expenseDetails.date} onChange={(e) => setExpenseDetails({ ...expenseDetails, date: e.target.value })} fullWidth margin="normal" />
-                            
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Paid By</InputLabel>
-                                <Select
-                                    value={expenseDetails.paidBy}
-                                    label="Paid By"
-                                    onChange={(e) => setExpenseDetails({ ...expenseDetails, paidBy: e.target.value })}
-                                >
-                                    {members.map((member, index) => (
-                                        <MenuItem key={index} value={member._id}>{member.name}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <FormGroup>
-                                {members.map((member, index) => (
-                                    <FormControlLabel
-                                        key={index}
-                                        control={
-                                            <Checkbox
-                                                checked={expenseDetails.involvedMembers.includes(member._id)}
-                                                onChange={(e) => {
-                                                    let newInvolvedMembers = [...expenseDetails.involvedMembers];
-                                                    if (e.target.checked) {
-                                                        newInvolvedMembers.push(member._id);
-                                                    } else {
-                                                        newInvolvedMembers = newInvolvedMembers.filter(id => id !== member._id);
-                                                    }
-                                                    setExpenseDetails({ ...expenseDetails, involvedMembers: newInvolvedMembers });
-                                                }}
-                                            />
-                                        }
-                                        label={member.name}
-                                    />
-                                ))}
-                            </FormGroup>
-
-                            <Button onClick={handleSaveExpense} variant="contained" color="primary" style={{ marginTop: '20px' }}>
-                                Save
-                            </Button>
+        
+        <Layout>
+            <Container>
+                <Box 
+                    sx={{ 
+                        marginTop: 4, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center' 
+                }}>
+                    <Box sx={styles.headingBox}>
+                        <Typography variant="h4">{tour ? tour.name : 'Loading...'}</Typography>
+                        <Box sx={styles.buttonGroup}>
+                            <Button onClick={handleBackClick} variant="outlined">Back to Dashboard</Button>
+                            <Button onClick={handleOpenModal} variant="contained" color="primary">Add New Expense</Button>
                         </Box>
-                    </Modal>
-                    {tour && tour.endDate ? (
-                        <>
-                            <SettlementsDisplay tourId={tour._id} />
-                            <ReactivateTourButton tourId={tour._id} onReactivate={refetchTourDetails} />
-                        </>
-                    ) : (
-                        <Button onClick={handleEndTour} variant="contained" color="error" style={{ marginTop: '20px' }}>
-                            End Tour
-                        </Button>
-                    )}
+                        <Accordion expanded={expanded === 'panel1'} onChange={handleAccordionChange('panel1')} style={styles.accordion}>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Typography>Expenses</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <List>
+                                    {renderExpenses()}
+                                </List>
+                            </AccordionDetails>
+                        </Accordion>
+                        <Modal open={openModal} onClose={handleCloseModal}>
+                            <Box 
+                                sx={{ 
+                                    position: 'absolute', 
+                                    top: '50%', 
+                                    left: '50%', 
+                                    transform: 'translate(-50%, -50%)',
+                                    width: { xs: '90vw', sm: '400px' }, // Responsive width
+                                    maxHeight: '80vh', // Maximum height
+                                    bgcolor: 'background.paper', 
+                                    boxShadow: 24, 
+                                    p: 4,
+                                    overflowY: 'auto' // Enable vertical scrolling 
+                                }}>
+                                <IconButton aria-label="close" onClick={handleCloseModal} sx={{ position: 'absolute', right: 8, top: 8 }}>
+                                    <CloseIcon />
+                                </IconButton>
+                                <Typography variant="h6">{expenseDetails._id ? 'Edit Expense' : 'Add Expense'}</Typography>
+                                <TextField label="Amount" value={expenseDetails.amount} onChange={(e) => setExpenseDetails({ ...expenseDetails, amount: e.target.value })} fullWidth margin="normal" />
+                                <TextField label="Description" value={expenseDetails.description} onChange={(e) => setExpenseDetails({ ...expenseDetails, description: e.target.value })} fullWidth margin="normal" />
+                                <TextField type="date" label="Date" value={expenseDetails.date} onChange={(e) => setExpenseDetails({ ...expenseDetails, date: e.target.value })} fullWidth margin="normal" />
+                                
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel>Paid By</InputLabel>
+                                    <Select
+                                        value={expenseDetails.paidBy}
+                                        label="Paid By"
+                                        onChange={(e) => setExpenseDetails({ ...expenseDetails, paidBy: e.target.value })}
+                                    >
+                                        {members.map((member, index) => (
+                                            <MenuItem key={index} value={member._id}>{member.name}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                <FormGroup>
+                                    {members.map((member, index) => (
+                                        <FormControlLabel
+                                            key={index}
+                                            control={
+                                                <Checkbox
+                                                    checked={expenseDetails.involvedMembers.includes(member._id)}
+                                                    onChange={(e) => {
+                                                        let newInvolvedMembers = [...expenseDetails.involvedMembers];
+                                                        if (e.target.checked) {
+                                                            newInvolvedMembers.push(member._id);
+                                                        } else {
+                                                            newInvolvedMembers = newInvolvedMembers.filter(id => id !== member._id);
+                                                        }
+                                                        setExpenseDetails({ ...expenseDetails, involvedMembers: newInvolvedMembers });
+                                                    }}
+                                                />
+                                            }
+                                            label={member.name}
+                                        />
+                                    ))}
+                                </FormGroup>
+
+                                <Button onClick={handleSaveExpense} variant="contained" color="primary" style={{ marginTop: '20px' }}>
+                                    Save
+                                </Button>
+                            </Box>
+                        </Modal>
+                        {tour && tour.endDate ? (
+                            <>
+                                <Accordion expanded={expanded === 'panel2'} onChange={handleAccordionChange('panel2')} style={styles.accordion}>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                        <Typography>Settlements</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <SettlementsDisplay tourId={tour._id} />
+                                    </AccordionDetails>
+                                </Accordion>
+                                <ReactivateTourButton tourId={tour._id} onReactivate={refetchTourDetails} />
+                            </>
+                        ) : (
+                            <Button onClick={handleEndTour} variant="contained" color="error" style={{ marginTop: '20px' }}>
+                                End Tour
+                            </Button>
+                        )}
+                    </Box>
                 </Box>
-            </Box>
 
-            <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-                <MuiAlert elevation={6} variant="filled" severity={!snackbarSeverity ? 'error' : snackbarSeverity} onClose={handleCloseSnackbar}>
-                    {snackbarMessage}
-                </MuiAlert>
-            </Snackbar>
+                <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+                    <MuiAlert elevation={6} variant="filled" severity={!snackbarSeverity ? 'error' : snackbarSeverity} onClose={handleCloseSnackbar}>
+                        {snackbarMessage}
+                    </MuiAlert>
+                </Snackbar>
 
-        </Container>
+            </Container>
+        </Layout>
     );
 };
 

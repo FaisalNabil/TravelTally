@@ -3,6 +3,7 @@ const router = express.Router();
 const Tour = require('../models/Tour');
 const Expense = require('../models/Expense');
 const Settlement = require('../models/Settlement');
+const IndividualExpenseRecord = require('../models/IndividualExpenseRecord');
 
 // Middleware
 const authenticate = require('../middleware/authenticate');
@@ -13,7 +14,6 @@ const calculateBalances = require('../utils/calculateBalances');
 // Create a new tour
 router.post('/create', authenticate, async (req, res) => {
     try {
-        console.log(req.user);
         const { name, members, startDate } = req.body;
         const newTour = new Tour({
             name,
@@ -52,11 +52,10 @@ router.post('/:tourId/end', authenticate, async (req, res) => {
         tour.endDate = new Date(); // Set the end date to now
 
         // Calculate balances
-        const settlementsData = calculateBalances(tour);
-console.log(settlementsData);
+        const { settlements, individualExpenses } = calculateBalances(tour);
 
         // Create settlement documents
-        const settlements = await Promise.all(settlementsData.map(async (data) => {
+        const settlementsData = await Promise.all(settlements.map(async (data) => {
             const settlement = new Settlement({
                 tour: tour._id,
                 fromMember: {
@@ -72,8 +71,22 @@ console.log(settlementsData);
             return settlement.save();
         }));
 
+        // Create individual expense records
+        await Promise.all(Object.keys(individualExpenses).map(memberId => {
+            const expense = individualExpenses[memberId];
+            return new IndividualExpenseRecord({
+                tour: tour._id,
+                member: {
+                    memberId: memberId,
+                    name: expense.name
+                },
+                paid: expense.paid,
+                shouldHavePaid: expense.shouldHavePaid
+            }).save();
+        }));
+
         await tour.save();
-        res.json({ tour, settlements });
+        res.json({ tour, settlementsData });
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error.message });
@@ -93,8 +106,9 @@ router.post('/:tourId/undoEnd', authenticate, async (req, res) => {
             return res.status(403).send('User not authorized');
         }
 
-        // Clear settlements and reset endDate
+        // Clear settlements, individualExpenseRecord and reset endDate
         await Settlement.deleteMany({ tour: tour._id });
+        await IndividualExpenseRecord.deleteMany({ tour: tour._id });
         tour.endDate = null;
         await tour.save();
 
@@ -140,5 +154,16 @@ router.get('/:tourId/settlements', authenticate, async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+router.get('/:tourId/individualExpenses', authenticate, async (req, res) => {
+    try {
+        const individualExpenses = await IndividualExpenseRecord.find({ tour: req.params.tourId });
+        res.json(individualExpenses);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 module.exports = router;

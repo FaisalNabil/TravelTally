@@ -12,7 +12,6 @@ const app = express();
 // Middleware
 app.use(cors());
 require('dotenv').config({ path: __dirname + '/.env' });
-console.log('Client Secret '+ process.env.GOOGLE_CLIENT_SECRET);
 
 const tourRoutes = require('./routes/tours');
 const expenseRoutes = require('./routes/expenses');
