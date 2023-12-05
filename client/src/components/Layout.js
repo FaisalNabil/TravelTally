@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Container, Tooltip, IconButton } from '@mui/material';
+import { Box, Container, Tooltip, IconButton } from '@mui/material';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { useAuth } from '../context/AuthContext';
 

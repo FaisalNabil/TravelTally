@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Container, Typography, Snackbar, Alert as MuiAlert, Box, Paper } from '@mui/material';
+import { Container, Typography, Snackbar, Alert as MuiAlert, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
