@@ -6,6 +6,7 @@ const passport = require('passport');
 //const cookieSession = require('cookie-session');
 //const passportSetup = require('passport-config');
 const path = require('path');
+const testRoutes = require('./tests/testRoutes');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use(passport.session());
 app.use('/api/tours', tourRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/auth', authRoutes);
+app.use('/test', testRoutes);
 
 app.get('/logout', (req, res) => {
     req.logout(); // Passport.js logout method
