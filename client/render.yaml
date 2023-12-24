@@ -1,0 +1,14 @@
+services:
+- type: web
+  name: travel-tally
+  env: static
+  buildCommand: npm run build
+  publishDir: build
+  staticPublishPath: /public
+  redirects:
+    - source: /static/*
+      destination: /static/*
+      permanent: true
+  rewrites:
+    - source: /*
+      destination: /index.html
