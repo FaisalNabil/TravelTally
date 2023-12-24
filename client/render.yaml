@@ -1,8 +1,0 @@
-services:
-- type: web
-  name: travel-tally
-  env: static
-    publishDir: build
-    rewrites:
-      - source: /*
-        destination: /index.html
