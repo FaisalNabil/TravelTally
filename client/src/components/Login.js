@@ -54,12 +54,8 @@ function Login() {
             localStorage.setItem('token', data.verifiedToken);
             setUser(data.user); // Update AuthContext with the new user
 
-            const storedUser = localStorage.getItem('user');
-            console.log("User:");
-            console.log(storedUser);
             // Redirect to dashboard
             //window.location.href = '/dashboard';
-            console.log("Navigating to dashboard");
             navigate('/dashboard');
 
         } catch (error) {

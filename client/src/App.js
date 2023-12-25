@@ -1,5 +1,6 @@
 import './App.css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -16,16 +17,24 @@ import FAQ from './components/FAQ';
 import About from './components/About';
 
 function App() {
+    const navigate = useNavigate();
+
+    // Callback for handling logout
+    const handleLogout = useCallback(() => {
+        navigate('/login', { replace: true });
+    }, [navigate]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             const token = localStorage.getItem('token');
             if (token && isTokenExpired(token)) {
+                handleLogout();
                 window.location.href = '/login';
             }
         }, 60000); // Check every minute
     
         return () => clearInterval(interval);
-    }, []);
+    }, [handleLogout]);
     
     return (
         <ThemeProvider theme={theme}>

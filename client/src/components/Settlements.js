@@ -19,7 +19,6 @@ function Settlements({ tourId }) {
     
             const settlementsData = await settlementsResponse.json();
             const expensesData = await expensesResponse.json();
-            console.log(individualExpenses);
     
             setSettlements(settlementsData);
             setIndividualExpenses(expensesData);
