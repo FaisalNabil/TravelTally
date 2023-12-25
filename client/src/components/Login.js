@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Container, Typography, Snackbar, Alert as MuiAlert, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 const serverUrl = process.env.REACT_APP_API_URL;
@@ -27,6 +28,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 
 
 function Login() {
+    const { setUser } = useAuth(); // Get setUser function from context
     const navigate = useNavigate();
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -50,6 +52,11 @@ function Login() {
             // Store user data in local storage or context
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('token', data.verifiedToken);
+            setUser(data.user); // Update AuthContext with the new user
+
+            const storedUser = localStorage.getItem('user');
+            console.log("User:");
+            console.log(storedUser);
             // Redirect to dashboard
             //window.location.href = '/dashboard';
             console.log("Navigating to dashboard");
@@ -59,7 +66,7 @@ function Login() {
             console.error('Login failed:', error);
             showAlert('Login failed: ' + error.message);
         }
-    }, [navigate]);
+    }, [navigate, setUser]);
 
     useEffect(() => {
         localStorage.removeItem('token');

@@ -73,7 +73,7 @@ const Dashboard = () => {
         };        
     
         fetchTours();
-    }, []);
+    }, [serverUrl]);
 
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
