@@ -10,6 +10,10 @@ import Dashboard from './components/Dashboard';
 import TourUpdate from './components/TourUpdate';
 import ProtectedRoute from './components/ProtectedRoute';
 import { isTokenExpired } from './utils';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
+import FAQ from './components/FAQ';
+import About from './components/About';
 
 function App() {
     useEffect(() => {
@@ -40,6 +44,10 @@ function App() {
                                         <TourUpdate />
                                     </ProtectedRoute>
                                 } />
+                            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                            <Route path="/terms-of-service" element={<TermsOfService />} />
+                            <Route path="/faq" element={<FAQ />} />
+                            <Route path="/about" element={<About />} />
                             {/* Redirect to login by default */}
                             <Route path="/" element={<Navigate to="/login" replace />} />
                         </Routes>

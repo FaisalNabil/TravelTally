@@ -9,7 +9,7 @@ html, body, #root {
 }
 
 .root-container {
-  max-width: 375px; /* typical width of a mobile device */
+  max-width: 33.333333%; /* typical width of a mobile device */
   margin: auto; /* centers the container */
   height: 100%;
   display: flex;
