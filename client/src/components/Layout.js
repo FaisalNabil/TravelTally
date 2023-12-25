@@ -1,21 +1,17 @@
 import React from 'react';
-import { Box, Container, Tooltip, IconButton } from '@mui/material';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import { useAuth } from '../context/AuthContext';
+import Header from './Header'; 
+import Footer from './Footer'; 
+import { Box } from '@mui/material';
 
 const Layout = ({ children }) => {
-    const { logout } = useAuth();
     return (
-        <Container>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: 2 }}>
-                <Tooltip title="Logout">
-                    <IconButton onClick={logout} color="inherit">
-                        <ExitToAppIcon />
-                    </IconButton>
-                </Tooltip>
+        <Box className="root-container">
+            <Header />
+            <Box component="main" sx={{ flexGrow: 1 }}>
+                {children}
             </Box>
-            {children}
-        </Container>
+            <Footer />
+        </Box>
     );
 };
 

@@ -3,8 +3,9 @@ import { Container, Button, Modal, Box, TextField, Typography, List, Snackbar, A
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate } from 'react-router-dom';
-import Layout from './Layout';
 import CloseIcon from '@mui/icons-material/Close';
+import Chip from '@mui/material/Chip';
+import BackButton from './BackButton';
 
 const Dashboard = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -12,6 +13,7 @@ const Dashboard = () => {
     const [newTourName, setNewTourName] = useState('');
     const [newTourMembers, setNewTourMembers] = useState([]);
     const [newTourStartDate, setNewTourStartDate] = useState(new Date());
+    const [memberNameInput, setMemberNameInput] = useState('');
     const navigate = useNavigate();
 
     const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -77,6 +79,20 @@ const Dashboard = () => {
 
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
+
+    // Function to handle adding a new member
+    const handleAddMember = () => {
+        if (memberNameInput) {
+            setNewTourMembers([...newTourMembers, memberNameInput]);
+            setMemberNameInput(''); // Clear the input field
+        }
+    };
+
+    // Function to remove a member
+    const handleRemoveMember = (index) => {
+        const updatedMembers = newTourMembers.filter((_, idx) => idx !== index);
+        setNewTourMembers(updatedMembers);
+    };
 
     // Function to add a new tour
     const handleAddTour = async () => {
@@ -153,88 +169,91 @@ const Dashboard = () => {
         setOpenSnackbar(false);
     };
     return (
-        <Layout>
-            <Container>
-                <Box sx={{ marginTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Box>
-                        <Box sx={styles.buttonGroup}>
-                            <Button onClick={handleOpenModal} variant="contained" color="primary">Add New Tour</Button>
-                        </Box>
-                    
-                        <Modal open={openModal} onClose={handleCloseModal}>
-                            <Box 
-                                sx={{ 
-                                    position: 'absolute', 
-                                    top: '50%', 
-                                    left: '50%', 
-                                    transform: 'translate(-50%, -50%)',
-                                    width: { xs: '90vw', sm: '400px' }, // Responsive width
-                                    maxHeight: '80vh', // Maximum height
-                                    bgcolor: 'background.paper', 
-                                    boxShadow: 24, 
-                                    p: 4,
-                                    overflowY: 'auto' // Enable vertical scrolling 
-                            }}>
-                                <IconButton aria-label="close" onClick={handleCloseModal} sx={{ position: 'absolute', right: 8, top: 8 }}>
-                                    <CloseIcon />
-                                </IconButton>
-                                <Typography variant="h6">Create New Tour</Typography>
-                                <TextField
-                                    label="Tour Name"
-                                    value={newTourName}
-                                    onChange={(e) => setNewTourName(e.target.value)}
-                                    fullWidth
-                                    margin="normal"
+        <Container sx={{ flexGrow: 1 }}>
+            <BackButton /> {/* Include the Back Button */}
+            <Box sx={{ marginTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Box>
+                    <Box sx={styles.buttonGroup}>
+                        <Button onClick={handleOpenModal} variant="contained" color="primary">Add New Tour</Button>
+                    </Box>
+                
+                    <Modal open={openModal} onClose={handleCloseModal}>
+                        <Box 
+                            sx={{ 
+                                position: 'absolute', 
+                                top: '50%', 
+                                left: '50%', 
+                                transform: 'translate(-50%, -50%)',
+                                width: { xs: '90vw', sm: '400px' }, // Responsive width
+                                maxHeight: '80vh', // Maximum height
+                                bgcolor: 'background.paper', 
+                                boxShadow: 24, 
+                                p: 4,
+                                overflowY: 'auto' // Enable vertical scrolling 
+                        }}>
+                            <IconButton aria-label="close" onClick={handleCloseModal} sx={{ position: 'absolute', right: 8, top: 8 }}>
+                                <CloseIcon />
+                            </IconButton>
+                            <Typography variant="h6">Create New Tour</Typography>
+                            <TextField
+                                label="Tour Name"
+                                value={newTourName}
+                                onChange={(e) => setNewTourName(e.target.value)}
+                                fullWidth
+                                margin="normal"
+                            />
+                            
+                            <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                <DatePicker
+                                    label="Start Date"
+                                    value={newTourStartDate}
+                                    onChange={(date) => setNewTourStartDate(date)}
+                                    renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
                                 />
-                                
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DatePicker
-                                        label="Start Date"
-                                        value={newTourStartDate}
-                                        onChange={(date) => setNewTourStartDate(date)}
-                                        renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
-                                    />
-                                </LocalizationProvider>
+                            </LocalizationProvider>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
                                 <TextField
-                                    label="Number of Members"
-                                    type="number"
+                                    label="Member Name"
+                                    value={memberNameInput}
+                                    onChange={(e) => setMemberNameInput(e.target.value)}
                                     fullWidth
-                                    margin="normal"
-                                    onChange={(e) => setNewTourMembers(Array(parseInt(e.target.value)).fill(''))}
                                 />
-                                {newTourMembers.map((_, index) => (
-                                    <TextField
-                                        key={index}
-                                        label={`Member ${index + 1} Name`}
-                                        onChange={(e) => {
-                                            const updatedMembers = [...newTourMembers];
-                                            updatedMembers[index] = e.target.value;
-                                            setNewTourMembers(updatedMembers);
-                                        }}
-                                        fullWidth
-                                        margin="normal"
-                                    />
-                                ))}
-                                <Button onClick={handleAddTour} variant="contained" color="primary" style={{ marginTop: '20px' }}>
-                                    Add Tour
+                                <Button onClick={handleAddMember} variant="contained" sx={{ ml: 2 }}>
+                                    Add
                                 </Button>
                             </Box>
+                            {/* List of added members */}
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                                {newTourMembers.map((member, index) => (
+                                    <Chip
+                                        key={index}
+                                        label={member}
+                                        onDelete={() => handleRemoveMember(index)}
+                                        color="primary"
+                                        variant="outlined"
+                                        sx={{ borderRadius: '4px' }}
+                                    />
+                                ))}
+                            </Box>
+                            <Button onClick={handleAddTour} variant="contained" color="primary" style={{ marginTop: '20px' }}>
+                                Add Tour
+                            </Button>
+                        </Box>
 
-                        </Modal>
+                    </Modal>
 
-                        <List sx={{ maxHeight: '300px', overflow: 'auto' }}>
-                            {renderTours()}
-                        </List>
-                    </Box> 
-                </Box>
+                    <List sx={{ maxHeight: '300px', overflow: 'auto' }}>
+                        {renderTours()}
+                    </List>
+                </Box> 
+            </Box>
 
-                <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-                    <MuiAlert elevation={6} variant="filled" severity="error" onClose={handleCloseSnackbar}>
-                        {snackbarMessage}
-                    </MuiAlert>
-                </Snackbar>
-            </Container>
-        </Layout>
+            <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+                <MuiAlert elevation={6} variant="filled" severity="error" onClose={handleCloseSnackbar}>
+                    {snackbarMessage}
+                </MuiAlert>
+            </Snackbar>
+        </Container>
     );
 };
 

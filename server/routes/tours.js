@@ -15,6 +15,11 @@ const calculateBalances = require('../utils/calculateBalances');
 router.post('/create', authenticate, async (req, res) => {
     try {
         const { name, members, startDate } = req.body;
+
+        if (!name || !members || !startDate) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+        
         const newTour = new Tour({
             name,
             createdBy: req.user.userId, // Assuming req.user is set by passport after authentication
@@ -25,6 +30,37 @@ router.post('/create', authenticate, async (req, res) => {
 
         await newTour.save();
         res.status(201).json(newTour);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Update a tour
+router.put('/:tourId', authenticate, async (req, res) => {
+    try {
+        const { name, members, startDate, endDate } = req.body;
+        const tourId = req.params.tourId;
+
+        // Find the tour and update it
+        const updatedTour = await Tour.findByIdAndUpdate(
+            tourId,
+            {
+                $set: {
+                    name: name,
+                    members: members,
+                    startDate: startDate,
+                    endDate: endDate
+                }
+            },
+            { new: true } // Return the updated document
+        ).populate('members', 'name');
+
+        if (!updatedTour) {
+            return res.status(404).send('Tour not found');
+        }
+
+        res.json(updatedTour);
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error.message });
