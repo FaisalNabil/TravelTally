@@ -10,6 +10,8 @@ const authenticate = require('../middleware/authenticate');
 
 //Utils
 const calculateBalances = require('../utils/calculateBalances');
+const logUserAction = require('../utils/actionLogging');
+
 
 // Create a new tour
 router.post('/create', authenticate, async (req, res) => {
@@ -29,6 +31,10 @@ router.post('/create', authenticate, async (req, res) => {
         });
 
         await newTour.save();
+
+        // Log the action
+        logUserAction(req.user, 'Create Tour', { newValue: newTour }, req);
+
         res.status(201).json(newTour);
     } catch (error) {
         console.log(error);
@@ -41,7 +47,8 @@ router.put('/:tourId', authenticate, async (req, res) => {
     try {
         const { name, members, startDate, endDate } = req.body;
         const tourId = req.params.tourId;
-
+        const oldTour = await Tour.findById(req.params.id);
+    
         // Find the tour and update it
         const updatedTour = await Tour.findByIdAndUpdate(
             tourId,
@@ -60,6 +67,9 @@ router.put('/:tourId', authenticate, async (req, res) => {
             return res.status(404).send('Tour not found');
         }
 
+        // Log the action
+        logUserAction(req.user, 'Update Tour', { oldValue: oldTour, newValue: updatedTour }, req);
+
         res.json(updatedTour);
     } catch (error) {
         console.log(error);
@@ -67,7 +77,6 @@ router.put('/:tourId', authenticate, async (req, res) => {
     }
 });
 
-// End a tour and calculate balances
 router.post('/:tourId/end', authenticate, async (req, res) => {
     try {
         const tour = await Tour.findById(req.params.tourId)
@@ -80,10 +89,11 @@ router.post('/:tourId/end', authenticate, async (req, res) => {
             return res.status(404).send('Tour not found');
         }
 
-        // Ensure that the user ending the tour is the one who created it
         if (tour.createdBy.toString() !== req.user.userId.toString()) {
             return res.status(403).send('User not authorized to end this tour');
         }
+
+        const oldTourState = JSON.parse(JSON.stringify(tour)); // Deep clone the tour object
 
         tour.endDate = new Date(); // Set the end date to now
 
@@ -122,12 +132,23 @@ router.post('/:tourId/end', authenticate, async (req, res) => {
         }));
 
         await tour.save();
+
+        const newSettlementsData = JSON.parse(JSON.stringify(settlementsData));
+        const newIndividualExpenses = JSON.parse(JSON.stringify(individualExpenses));
+        const newTourState = JSON.parse(JSON.stringify(tour));
+
+        logUserAction(req.user, 'End Tour', {
+            oldValue: oldTourState,
+            newValue: { tour: newTourState, settlements: newSettlementsData, individualExpenses: newIndividualExpenses }
+        }, req);
+
         res.json({ tour, settlementsData });
     } catch (error) {
-        console.log(error);
+        console.error('Error:', error);
         res.status(500).json({ message: error.message });
     }
 });
+
 
 router.post('/:tourId/undoEnd', authenticate, async (req, res) => {
     try {
@@ -148,6 +169,12 @@ router.post('/:tourId/undoEnd', authenticate, async (req, res) => {
         tour.endDate = null;
         await tour.save();
 
+        // Log the action
+        logUserAction(req.user, 'Reactivate Tour', {
+            oldValue: { endDate: tour.endDate }, // Old detail (end date)
+            newValue: null // Since the tour is reactivated, there's no new value
+        }, req);
+
         res.status(200).send('Tour reactivated');
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -158,6 +185,10 @@ router.post('/:tourId/undoEnd', authenticate, async (req, res) => {
 router.get('/history', authenticate, async (req, res) => {
     try {
         const tours = await Tour.find({ createdBy: req.user.userId }).sort({ startDate: -1 });
+
+        // Log the action
+        logUserAction(req.user, 'Access Tour History', {}, req);
+
         res.json(tours);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -175,6 +206,9 @@ router.get('/:tourId', authenticate, async (req, res) => {
             return res.status(404).send('Tour not found');
         }
 
+        // Log the action
+        logUserAction(req.user, 'Access Tour Details', { tourId: req.params.tourId }, req);
+
         res.json(tour);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -184,6 +218,10 @@ router.get('/:tourId', authenticate, async (req, res) => {
 router.get('/:tourId/settlements', authenticate, async (req, res) => {
     try {
         const settlements = await Settlement.find({ tour: req.params.tourId });
+
+        // Log the action
+        logUserAction(req.user, 'Access Tour Settlements', { tourId: req.params.tourId }, req);
+        
         res.json(settlements);
     } catch (error) {
         console.log(error);
@@ -194,6 +232,10 @@ router.get('/:tourId/settlements', authenticate, async (req, res) => {
 router.get('/:tourId/individualExpenses', authenticate, async (req, res) => {
     try {
         const individualExpenses = await IndividualExpenseRecord.find({ tour: req.params.tourId });
+
+        // Log the action
+        logUserAction(req.user, 'Access Individual Expenses', { tourId: req.params.tourId }, req);
+    
         res.json(individualExpenses);
     } catch (error) {
         console.log(error);

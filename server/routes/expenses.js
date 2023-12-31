@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
 const Tour = require('../models/Tour');
+
+// Middleware
 const authenticate = require('../middleware/authenticate');
+
+//Utils
+const logUserAction = require('../utils/actionLogging');
 
 // Add a new expense to a tour
 router.post('/add', authenticate, async (req, res) => {
@@ -29,6 +34,11 @@ router.post('/add', authenticate, async (req, res) => {
         // Optionally, add this expense to the tour's expenses array
         tour.expenses.push(newExpense._id);
         await tour.save();
+
+        // Log the action
+        logUserAction(req.user, 'Add Expense', {
+            newValue: JSON.parse(JSON.stringify(newExpense))
+        }, req);
 
         res.status(201).json(newExpense);
     } catch (error) {
@@ -61,11 +71,19 @@ router.put('/:expenseId', authenticate, async (req, res) => {
             return res.status(404).send('Expense not found');
         }
 
+        const oldExpenseState = JSON.parse(JSON.stringify(expense)); // Deep clone
+
         // Update fields
         expense.amount = amount || expense.amount;
         expense.description = description || expense.description;
         expense.date = date || expense.date;
         expense.involvedMembers = involvedMembers || expense.involvedMembers;
+
+        // Log the action
+        logUserAction(req.user, 'Update Expense', {
+            oldValue: oldExpenseState,
+            newValue: JSON.parse(JSON.stringify(expense))
+        }, req);
 
         await expense.save();
         res.json(expense);
@@ -81,8 +99,18 @@ router.delete('/:expenseId', authenticate, async (req, res) => {
         if (!expense) {
             return res.status(404).send('Expense not found');
         }
+
+        const oldExpenseState = JSON.parse(JSON.stringify(expense)); // Deep clone
+    
         // Optionally, remove this expense from the tour's expenses array
         await Tour.updateOne({ _id: expense.tour }, { $pull: { expenses: expense._id } });
+        await Expense.findByIdAndDelete(req.params.expenseId);
+
+        // Log the action
+        logUserAction(req.user, 'Delete Expense', {
+            oldValue: oldExpenseState
+        }, req);
+    
         res.status(200).send('Expense deleted');
     } catch (error) {
         res.status(500).json({ message: error.message });

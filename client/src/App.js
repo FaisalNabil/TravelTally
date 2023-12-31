@@ -1,6 +1,5 @@
 import './App.css';
-import React, { useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -10,36 +9,19 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import TourUpdate from './components/TourUpdate';
 import ProtectedRoute from './components/ProtectedRoute';
-import { isTokenExpired } from './utils';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import FAQ from './components/FAQ';
 import About from './components/About';
+import LogoutWatcher from './components/LogoutWatcher';
 
 function App() {
-    const navigate = useNavigate();
-
-    // Callback for handling logout
-    const handleLogout = useCallback(() => {
-        navigate('/login', { replace: true });
-    }, [navigate]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const token = localStorage.getItem('token');
-            if (token && isTokenExpired(token)) {
-                handleLogout();
-                window.location.href = '/login';
-            }
-        }, 60000); // Check every minute
-    
-        return () => clearInterval(interval);
-    }, [handleLogout]);
     
     return (
         <ThemeProvider theme={theme}>
             <AuthProvider>
                 <Router>
+                    <LogoutWatcher />
                     <Layout>
                         <Routes>
                             <Route path="/login" element={<Login />} />
