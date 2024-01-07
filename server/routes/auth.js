@@ -86,7 +86,7 @@ router.post('/google/callback', async (req, res) => {
       await loginRecord.save();
 
       // Log the user action
-      logUserAction(req.user, actionType, {
+      logUserAction(user, actionType, {
           oldValue: oldValue,
           newValue: newValue,
           additionalInfo: {
