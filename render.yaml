@@ -1,0 +1,22 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# After first deploy, set Environment variables in the Render dashboard (see below).
+# REACT_APP_API_URL must match your service URL (e.g. https://your-service.onrender.com)
+# so the client build calls the correct API.
+
+services:
+  - type: web
+    name: tour-expense-tracker
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /test/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Set these in the Render dashboard (do not commit secrets):
+      # MONGODB_URI
+      # GOOGLE_CLIENT_ID
+      # GOOGLE_CLIENT_SECRET
+      # REACT_APP_API_URL   — required at build time; use your Render HTTPS URL, then redeploy
+      # REACT_APP_GOOGLE_CLIENT_ID — same as GOOGLE_CLIENT_ID for the React app build
