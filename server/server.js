@@ -10,9 +10,19 @@ const testRoutes = require('./tests/testRoutes');
 
 const app = express();
 
+require('dotenv').config({ path: __dirname + '/.env' });
+
+if (!process.env.PORT) {
+    console.error('Missing required env var: PORT');
+    process.exit(1);
+}
+if (!process.env.MONGODB_URI) {
+    console.error('Missing required env var: MONGODB_URI');
+    process.exit(1);
+}
+
 // Middleware
 app.use(cors());
-require('dotenv').config({ path: __dirname + '/.env' });
 
 const tourRoutes = require('./routes/tours');
 const expenseRoutes = require('./routes/expenses');

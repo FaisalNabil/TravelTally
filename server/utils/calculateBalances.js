@@ -1,5 +1,3 @@
-const { aggregate } = require("../models/Tour");
-
 function calculateBalances(tour) {
     let balances = {};
     let individualExpenses = {};

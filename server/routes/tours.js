@@ -47,7 +47,7 @@ router.put('/:tourId', authenticate, async (req, res) => {
     try {
         const { name, members, startDate, endDate } = req.body;
         const tourId = req.params.tourId;
-        const oldTour = await Tour.findById(req.params.id);
+        const oldTour = await Tour.findById(tourId);
     
         // Find the tour and update it
         const updatedTour = await Tour.findByIdAndUpdate(

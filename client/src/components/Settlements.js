@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 
+const serverUrl = process.env.REACT_APP_API_URL;
+
 function Settlements({ tourId }) {
     const [settlements, setSettlements] = useState([]);
     const [individualExpenses, setIndividualExpenses] = useState([]);
@@ -8,10 +10,12 @@ function Settlements({ tourId }) {
 
     useEffect(() => {
         setIsLoading(true);
-    
+        const token = localStorage.getItem('token');
+        const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
         Promise.all([
-            fetch(`/api/tours/${tourId}/settlements`),
-            fetch(`/api/tours/${tourId}/individualExpenses`)
+            fetch(`${serverUrl}/api/tours/${tourId}/settlements`, { headers: authHeaders }),
+            fetch(`${serverUrl}/api/tours/${tourId}/individualExpenses`, { headers: authHeaders })
         ])
         .then(async ([settlementsResponse, expensesResponse]) => {
             if (!settlementsResponse.ok) throw new Error('Error fetching settlements');
