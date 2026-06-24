@@ -28,12 +28,22 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 
 
 function Login() {
-    const { setUser } = useAuth(); // Get setUser function from context
+    const { setUser } = useAuth();
     const navigate = useNavigate();
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-    
+
+    const showAlert = useCallback((message) => {
+        setSnackbarMessage(message);
+        setOpenSnackbar(true);
+    }, []);
+
     const handleCredentialResponse = useCallback(async (response) => {
+        if (!serverUrl) {
+            showAlert('API URL is not configured. Set REACT_APP_API_URL and redeploy.');
+            return;
+        }
+
         try {
             const res = await fetch(`${serverUrl}/auth/google/callback`, {
                 method: 'POST',
@@ -48,43 +58,73 @@ function Login() {
             }
 
             const data = await res.json();
-            
-            // Store user data in local storage or context
+
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('token', data.verifiedToken);
-            setUser(data.user); // Update AuthContext with the new user
+            setUser(data.user);
 
-            // Redirect to dashboard
-            //window.location.href = '/dashboard';
             navigate('/dashboard');
 
         } catch (error) {
             console.error('Login failed:', error);
             showAlert('Login failed: ' + error.message);
         }
-    }, [navigate, setUser]);
+    }, [navigate, setUser, showAlert]);
 
     useEffect(() => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        window.google?.accounts.id.initialize({
-            client_id: clientId,
-            context: 'signin',
-            callback: handleCredentialResponse
-        });
+        if (!clientId) {
+            showAlert('Google login is not configured. Set REACT_APP_GOOGLE_CLIENT_ID and redeploy.');
+            return;
+        }
 
-        window.google?.accounts.id.renderButton(
-            document.getElementById("signInDiv"),
-            { theme: "outline", size: "large" }
-        );
+        let cancelled = false;
+        let attempts = 0;
+        const maxAttempts = 50;
 
-    }, [handleCredentialResponse]);
+        const initGoogleSignIn = () => {
+            if (cancelled || !window.google?.accounts?.id) {
+                return false;
+            }
 
-    const showAlert = (message) => {
-        setSnackbarMessage(message);
-        setOpenSnackbar(true);
-    };
+            const signInDiv = document.getElementById('signInDiv');
+            if (!signInDiv) {
+                return false;
+            }
+
+            signInDiv.innerHTML = '';
+
+            window.google.accounts.id.initialize({
+                client_id: clientId,
+                context: 'signin',
+                callback: handleCredentialResponse,
+            });
+
+            window.google.accounts.id.renderButton(signInDiv, {
+                theme: 'outline',
+                size: 'large',
+            });
+
+            return true;
+        };
+
+        const intervalId = setInterval(() => {
+            attempts += 1;
+            if (initGoogleSignIn()) {
+                clearInterval(intervalId);
+            } else if (attempts >= maxAttempts) {
+                clearInterval(intervalId);
+                showAlert('Failed to load Google Sign-In. Check ad blockers or try again.');
+            }
+        }, 100);
+
+        return () => {
+            cancelled = true;
+            clearInterval(intervalId);
+        };
+    }, [handleCredentialResponse, showAlert]);
 
     const handleCloseSnackbar = () => {
         setOpenSnackbar(false);
