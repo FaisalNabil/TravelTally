@@ -22,7 +22,10 @@ if (!process.env.MONGODB_URI) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || true,
+    credentials: true,
+}));
 
 const tourRoutes = require('./routes/tours');
 const expenseRoutes = require('./routes/expenses');
@@ -64,7 +67,7 @@ app.get('*', (req, res) => {
 });
   
 const PORT = process.env.PORT;
-app.listen(PORT, () => {
-
-    console.log(`Server running on port ${PORT}`)
+const HOST = process.env.HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+    console.log(`Server running on ${HOST}:${PORT}`)
 });

@@ -1,118 +1,77 @@
-# Travel Expense Manager
+# Travel Tally
 
-Travel Expense Manager is a web application designed to simplify the management and splitting of travel expenses among friends. With an intuitive interface and Google account integration, it makes tracking and settling travel costs hassle-free and transparent.
+Split travel costs fairly — no spreadsheets, no awkward math.
 
-## Features
+## Stack
 
-- **Google Account Integration:** Secure login using your Google account.
-- **Create Tours:** Organize your trips with custom tour creation.
-- **Manage Expenses:** Log and track expenses for each tour.
-- **Split Costs:** Automatically calculate who owes whom at the end of the tour.
-- **View History:** Access the history of past tours and expenses.
-- **Responsive Design:** Accessible on various devices, providing a seamless experience.
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, TanStack Query, PWA
+- **Backend:** Express, MongoDB, Google Sign-In, JWT
 
-## Getting Started
+## Local development
 
 ### Prerequisites
 
-- Node.js (v12 or later)
-- npm (v6 or later)
+- Node.js 18+
 - MongoDB
 
-### Installation
+### Environment variables
 
-1. **Clone the repository:**
+**Server** (`server/.env`):
 
-   ```bash
-   git clone https://github.com/FaisalNabil/TravelTally.git
-   cd TravelTally
-   ```
+```env
+MONGODB_URI=mongodb://localhost:27017/traveltally
+PORT=3000
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+JWT_SECRET=your_jwt_secret_min_32_chars
+```
 
-2. **Install dependencies:**
+**Client** (`client/.env`):
 
-   ```bash
-   npm install
-   ```
+```env
+VITE_API_URL=http://localhost:3000
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+```
 
-### Set Up Environment Variables
+### Run
 
-Your application requires setting up environment variables for both the server and the client. These variables are crucial for configuring the database, server, and Google OAuth.
+```bash
+npm install
+cd server && npm install && cd ..
+cd client && npm install && cd ..
+npm run dev
+```
 
-#### Server Environment Variables
+- API: http://localhost:3000
+- Client dev server: http://localhost:5173 (proxies `/api` and `/auth`)
 
-1. In the `server` directory, create a `.env` file with the following variables:
+### Production build
 
-   ```env
-   # Database Configuration
-   MONGODB_URI=mongodb://localhost:27017/YourDatabaseName
+```bash
+npm run build
+npm run start:prod
+```
 
-   # Server Configuration
-   PORT=3000
+Serves the built SPA from `client/dist`.
 
-   # Google OAuth Configuration
-   GOOGLE_CLIENT_ID=yourGoogleClientId
-   GOOGLE_CLIENT_SECRET=yourGoogleClientSecret
-   ```
+## Deploy (Render)
 
-   Replace `yourGoogleClientId`, `yourGoogleClientSecret`, and `YourDatabaseName` with your actual configurations. If you're using MongoDB Atlas or another cloud database, replace the `MONGODB_URI` with your cloud database URI.
+Set in the Render dashboard:
 
-#### Client Environment Variables
-
-2. In the `client` directory, create a `.env` file with the following variables:
-
-   ```env
-   # Server Configuration
-   PORT=4000
-
-   # Google OAuth Configuration
-   REACT_APP_GOOGLE_CLIENT_ID=yourGoogleClientId
-   REACT_APP_GOOGLE_CLIENT_SECRET=yourGoogleClientSecret
-
-   # API URL
-   REACT_APP_API_URL=http://localhost:3000
-   ```
-
-   Ensure that `REACT_APP_GOOGLE_CLIENT_ID` and `REACT_APP_GOOGLE_CLIENT_SECRET` match the Google OAuth credentials used in the server configuration. The `REACT_APP_API_URL` should point to the URL where your server is running.
-
-
-### Running the Application
-
-1. **Start the server:**
-
-   ```bash
-   npm start
-   ```
-
-   This will start the Node.js server on the default port (usually `5000`).
-
-2. **Accessing the application:**
-
-   Open your browser and navigate to `http://localhost:5000` (or the port you've configured).
-
-## Usage
-
-- **Log in** with your Google account to start using the application.
-- **Create a tour** by specifying the tour name, start date, and members.
-- **Add expenses** during the tour, specifying who paid and who was involved.
-- **End the tour** to see the final settlements - who owes whom and how much.
-- **View past tours** and expenses in the history section.
-
-## Contributing
-
-Contributions to Travel Expense Manager are welcome!
-
-1. Fork the project.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a pull request.
+| Variable | Notes |
+|----------|-------|
+| `MONGODB_URI` | MongoDB connection string |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `JWT_SECRET` | Dedicated JWT signing secret |
+| `VITE_API_URL` | Your Render service URL (build-time) |
+| `VITE_GOOGLE_CLIENT_ID` | Same as `GOOGLE_CLIENT_ID` (build-time) |
+| `PORT` | Set by Render automatically |
 
 ## License
 
-This project is currently not open source.
+Proprietary — see repository owner.
 
 ## Contact
 
-Your Name - [tousif.md.amin.faisal@gmail.com](mailto:tousif.md.amin.faisal@gmail.com)
-
-Project Link: [https://github.com/FaisalNabil/TravelTally.git](https://github.com/FaisalNabil/TravelTally.git)
+[tousif.md.amin.faisal@gmail.com](mailto:tousif.md.amin.faisal@gmail.com)

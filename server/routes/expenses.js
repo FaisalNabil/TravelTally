@@ -3,22 +3,26 @@ const router = express.Router();
 const Expense = require('../models/Expense');
 const Tour = require('../models/Tour');
 
-// Middleware
 const authenticate = require('../middleware/authenticate');
+const { authorizeTourAccess, authorizeExpenseAccess } = require('../middleware/authorizeTour');
 
 //Utils
 const logUserAction = require('../utils/actionLogging');
 
 // Add a new expense to a tour
-router.post('/add', authenticate, async (req, res) => {
+router.post('/add', authenticate, authorizeTourAccess, async (req, res) => {
     try {
-        const { paidBy, amount, description, date, involvedMembers, tourId } = req.body;
+        const { paidBy, amount, description, date, involvedMembers } = req.body;
+        const tourId = req.body.tourId;
 
-        // Optionally, validate that the tour exists and the user is a member
-        const tour = await Tour.findById(tourId);
-        if (!tour) {
-            return res.status(404).send('Tour not found');
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ message: 'Amount must be greater than zero' });
         }
+        if (!paidBy || !involvedMembers?.length) {
+            return res.status(400).json({ message: 'Paid by and involved members are required' });
+        }
+
+        const tour = req.tour;
 
         const newExpense = new Expense({
             tour: tourId,
@@ -62,19 +66,17 @@ router.get('/:expenseId', authenticate, async (req, res) => {
 });
 
 // Update an expense
-router.put('/:expenseId', authenticate, async (req, res) => {
+router.put('/:expenseId', authenticate, authorizeExpenseAccess, async (req, res) => {
     try {
         const { amount, description, date, involvedMembers } = req.body;
-        const expense = await Expense.findById(req.params.expenseId);
+        const expense = req.expense;
+        const oldExpenseState = JSON.parse(JSON.stringify(expense));
 
-        if (!expense) {
-            return res.status(404).send('Expense not found');
+        if (amount !== undefined && amount <= 0) {
+            return res.status(400).json({ message: 'Amount must be greater than zero' });
         }
 
-        const oldExpenseState = JSON.parse(JSON.stringify(expense)); // Deep clone
-
-        // Update fields
-        expense.amount = amount || expense.amount;
+        expense.amount = amount ?? expense.amount;
         expense.description = description || expense.description;
         expense.date = date || expense.date;
         expense.involvedMembers = involvedMembers || expense.involvedMembers;
@@ -93,16 +95,11 @@ router.put('/:expenseId', authenticate, async (req, res) => {
 });
 
 // Delete an expense
-router.delete('/:expenseId', authenticate, async (req, res) => {
+router.delete('/:expenseId', authenticate, authorizeExpenseAccess, async (req, res) => {
     try {
-        const expense = await Expense.findByIdAndDelete(req.params.expenseId);
-        if (!expense) {
-            return res.status(404).send('Expense not found');
-        }
+        const expense = req.expense;
+        const oldExpenseState = JSON.parse(JSON.stringify(expense));
 
-        const oldExpenseState = JSON.parse(JSON.stringify(expense)); // Deep clone
-    
-        // Optionally, remove this expense from the tour's expenses array
         await Tour.updateOne({ _id: expense.tour }, { $pull: { expenses: expense._id } });
         await Expense.findByIdAndDelete(req.params.expenseId);
 

@@ -2,10 +2,11 @@ function calculateBalances(tour) {
     let balances = {};
     let individualExpenses = {};
 
-    // Initialize balances for each member
+    // Initialize balances for each member (members use memberId, not subdocument _id)
     tour.members.forEach(member => {
-        balances[member._id.toString()] = { paid: 0, owes: 0, name: member.name };
-        individualExpenses[member._id.toString()] = { paid: 0, shouldHavePaid: 0, name: member.name };
+        const id = (member.memberId || member._id).toString();
+        balances[id] = { paid: 0, owes: 0, name: member.name };
+        individualExpenses[id] = { paid: 0, shouldHavePaid: 0, name: member.name };
     });
 
     // Aggregate expenses

@@ -18,5 +18,6 @@ services:
       # MONGODB_URI
       # GOOGLE_CLIENT_ID
       # GOOGLE_CLIENT_SECRET
-      # REACT_APP_API_URL   — required at build time; use your Render HTTPS URL, then redeploy
-      # REACT_APP_GOOGLE_CLIENT_ID — same as GOOGLE_CLIENT_ID for the React app build
+      # VITE_API_URL   — required at build time; use your Render HTTPS URL, then redeploy
+      # VITE_GOOGLE_CLIENT_ID — same as GOOGLE_CLIENT_ID for the React app build
+      # JWT_SECRET — dedicated secret for signing JWTs (recommended)

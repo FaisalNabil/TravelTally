@@ -1,21 +1,21 @@
 const jwt = require('jsonwebtoken');
 
-const CLIENT_SECTRET = process.env.GOOGLE_CLIENT_SECRET; 
+const JWT_SECRET = process.env.JWT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
 
 function authenticate(req, res, next) {
-    const token = req.headers.authorization?.split(' ')[1].replace(/"/g, ''); // Bearer Token
+    const token = req.headers.authorization?.split(' ')[1]?.replace(/"/g, '');
 
     if (!token) {
-        return res.status(401).send('No token provided');
+        return res.status(401).json({ message: 'No token provided' });
     }
 
     try {
-        const decoded = jwt.verify(token, CLIENT_SECTRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded; // Add user info to request object
         next();
     } catch (error) {
         console.log(error);
-        res.status(401).send('Invalid token');
+        res.status(401).json({ message: 'Invalid token' });
     }
   }
   

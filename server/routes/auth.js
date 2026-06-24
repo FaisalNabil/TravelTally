@@ -7,7 +7,7 @@ const User = require('../models/User');
 const LoginRecord = require('../models/LoginRecord'); // Import the model
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID; 
-const CLIENT_SECTRET = process.env.GOOGLE_CLIENT_SECRET; 
+const JWT_SECRET = process.env.JWT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
 const client = new OAuth2Client(CLIENT_ID);
 
 //Utils
@@ -74,11 +74,11 @@ router.post('/google/callback', async (req, res) => {
           newValue = JSON.parse(JSON.stringify(user)); // New user details
       }
 
-      const verifiedToken = jwt.sign({ userId: user._id }, CLIENT_SECTRET, { expiresIn: '1h' });
+      const verifiedToken = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '24h' });
 
       // Create a new login record
       const loginRecord = new LoginRecord({
-          userId: user._id,
+          user: user._id,
           // Example of capturing IP address and user agent
           ipAddress: req.ip,
           userAgent: req.get('User-Agent')

@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Tour = require('../models/Tour');
 const Expense = require('../models/Expense');
@@ -7,6 +8,7 @@ const IndividualExpenseRecord = require('../models/IndividualExpenseRecord');
 
 // Middleware
 const authenticate = require('../middleware/authenticate');
+const { authorizeTourAccess } = require('../middleware/authorizeTour');
 
 //Utils
 const calculateBalances = require('../utils/calculateBalances');
@@ -22,10 +24,15 @@ router.post('/create', authenticate, async (req, res) => {
             return res.status(400).json({ message: "Missing required fields" });
         }
         
+        const normalizedMembers = members.map((m) => ({
+            memberId: m.memberId || new mongoose.Types.ObjectId(),
+            name: m.name,
+        }));
+
         const newTour = new Tour({
             name,
-            createdBy: req.user.userId, // Assuming req.user is set by passport after authentication
-            members,
+            createdBy: req.user.userId,
+            members: normalizedMembers,
             startDate,
             expenses: []
         });
@@ -43,7 +50,7 @@ router.post('/create', authenticate, async (req, res) => {
 });
 
 // Update a tour
-router.put('/:tourId', authenticate, async (req, res) => {
+router.put('/:tourId', authenticate, authorizeTourAccess, async (req, res) => {
     try {
         const { name, members, startDate, endDate } = req.body;
         const tourId = req.params.tourId;
@@ -196,7 +203,7 @@ router.get('/history', authenticate, async (req, res) => {
 });
 
 // Get details of a specific tour
-router.get('/:tourId', authenticate, async (req, res) => {
+router.get('/:tourId', authenticate, authorizeTourAccess, async (req, res) => {
     try {
         const tour = await Tour.findById(req.params.tourId)
                                .populate('members', 'name')
@@ -215,7 +222,7 @@ router.get('/:tourId', authenticate, async (req, res) => {
     }
 });
 
-router.get('/:tourId/settlements', authenticate, async (req, res) => {
+router.get('/:tourId/settlements', authenticate, authorizeTourAccess, async (req, res) => {
     try {
         const settlements = await Settlement.find({ tour: req.params.tourId });
 
@@ -229,7 +236,7 @@ router.get('/:tourId/settlements', authenticate, async (req, res) => {
     }
 });
 
-router.get('/:tourId/individualExpenses', authenticate, async (req, res) => {
+router.get('/:tourId/individualExpenses', authenticate, authorizeTourAccess, async (req, res) => {
     try {
         const individualExpenses = await IndividualExpenseRecord.find({ tour: req.params.tourId });
 
